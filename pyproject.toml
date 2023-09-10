@@ -1,0 +1,74 @@
+[tool.poetry]
+name = "downsat"
+version = "0.1.0"
+description = ""
+authors = ["seidlj <jakub.seidl@email.cz>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+attrs = "^22.2.0"
+cattrs = "^23.1.2"
+arrow = "^1.2.3"
+diskcache = "^5.4.0"
+eumdac = "^2.0.1"
+joblib = "^1.2.0"
+requests = "^2.28.2"
+pyyaml = "^6.0"
+importlib-resources = "^5.10.2"
+setuptools = "^67.3.2"
+importlib-metadata = "^6.0.0"
+pyresample = "^1.26.1"
+spacetrack = "^1.0.1"
+filelock = "^3.12.2"
+satpy = {version = "^0.40.0", optional = true}
+pyorbital = {version = "^1.7.3", optional = true}
+trollimage = {version = "^1.20.1", optional = true}
+trollsift = "^0.5.0"
+typing-extensions = "^4.7.1"
+
+
+[tool.poetry.extras]
+pytroll = ["satpy", "pyorbital", "trollimage"]
+
+
+[tool.poetry.group.dev.dependencies]
+autoflake = "^2.0.0"
+isort = "^5.11.4"
+black = "^22.12.0"
+mypy = "^0.991"
+pytest-cov = "^4.0.0"
+flake8 = "^6.0.0"
+flake8-isort = "^6.0.0"
+flake8-unused-arguments = "^0.0.12"
+flake8-bugbear = "^23.1.17"
+pytest-dotenv = "^0.5.2"
+pytest-cases = "^3.6.13"
+pytest-mock = "^3.10.0"
+pytest-order = "^1.1.0"
+
+
+[tool.poetry.group.ipython.dependencies]
+ipython = "^8.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.coverage.report]
+exclude_lines = [
+    'pragma: no cover', # Have to re-enable the standard pragma    
+    'if TYPE_CHECKING:' # Don't complain on type checking imports
+]
+
+[tool.black]
+line-length = 110
+target-version = ["py38"]
+
+[tool.isort]
+force_to_top = ["typing"]
+profile = "black"
+lines_between_sections = 1
+lines_after_imports = 2
+line_length = 110
+force_sort_within_sections = true

@@ -1,0 +1,25 @@
+# This is the default platform configuration
+registered_components:  
+  EumdacKey:
+    class_type: !!python/name:downsat.EumdacKey    
+    required_parameters: [key, secret]
+  EumdacUser:
+    class_type: !!python/name:downsat.EumdacUser
+    required_parameters: [name, key]
+  MSG:
+    class_type: !!python/name:downsat.MSG
+    required_parameters: ["credentials", "data_path"]
+  RSS:
+    class_type: !!python/name:downsat.RSS
+    required_parameters: ["credentials", "data_path"]
+  METOP:
+    class_type: !!python/name:downsat.Metop
+    required_parameters: ["credentials", "data_path"]
+
+env_parameter_names:
+  EumdacKey.key: EUMDAC_KEY
+  EumdacKey.secret: EUMDAC_SECRET
+  EumdacUser.name: EUMDAC_USERNAME
+  MSG.data_path: DOWNSAT_MSG_PATH
+  RSS.data_path: DOWNSAT_RSS_PATH
+  METOP.data_path: DOWNSAT_METOP_PATH

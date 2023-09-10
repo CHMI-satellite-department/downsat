@@ -1,0 +1,34 @@
+image: python:3.10
+
+stages:
+- test
+- quality-check
+
+.poetry_install: &poetry_install
+  - python -m pip install poetry==1.3.2
+  - poetry config virtualenvs.in-project true
+  - poetry install --all-extras -vv
+
+downsat-test:
+  stage: test
+  before_script:
+    - *poetry_install
+  script:
+    - make test 
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+downsat-quality-check:
+  stage: quality-check
+  before_script:
+    - *poetry_install 
+  script:       
+    - make lint
+
+sast:
+  stage: test
+include:
+- template: Security/SAST.gitlab-ci.yml

@@ -1,0 +1,16 @@
+leo:
+  METOP-A:
+    norad_id: 29499
+    instruments:
+      AVHRR:  # https://www.eumetsat.int/avhrr
+        model: AVHRR/3
+        swath_angle: 55.37  # https://www.eumetsat.int/avhrr
+        scan_rate: 6  # https://www.eumetsat.int/avhrr
+  
+  METOP-B:
+    norad_id: 38771
+    instruments:
+      AVHRR:  # https://www.eumetsat.int/avhrr
+        model: AVHRR/3
+        swath_angle: 55.37  # https://www.eumetsat.int/avhrr
+        scan_rate: 6  # https://www.eumetsat.int/avhrr
