@@ -23,8 +23,8 @@ Downsat offers a simplified approach to downloading and managing meteorological 
 
 ### [Satpy](#satpy-1)
 
-- Satpy scene: `from downsat import SatpyScene`
-- Satpy composite image: `from downsat import SatpyProduct`
+- Satpy scene: `from downsat.satpy import SatpyScene`
+- Satpy composite image: `from downsat.satpy import SatpyProduct`
 
 ### [Historical TLE - spacetrack](#tle)
 
@@ -170,7 +170,7 @@ The downsat data sources are well-suited for integration with satpy
 #### Creating satpy product
 
 ```python
-from downsat import SatpyProduct
+from downsat.satpy import SatpyProduct
 
 msg = MSG.from_env(data_path=data_path)
 natural_color = SatpyProduct(msg, "natural_color", area="eurol")

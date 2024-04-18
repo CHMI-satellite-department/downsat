@@ -51,7 +51,7 @@ def test_downloading_data(msg_archive_path: Path, eumdac_key: "EumdacKey") -> No
     # --- SatpyProduct
     from trollimage.xrimage import XRImage
 
-    from downsat import SatpyProduct
+    from downsat.satpy import SatpyProduct
 
     msg = MSG.from_env(data_path=msg_archive_path, num_workers=3)
     natural_color = SatpyProduct(msg, "natural_color", area="eurol")
@@ -66,7 +66,7 @@ def test_downloading_data(msg_archive_path: Path, eumdac_key: "EumdacKey") -> No
     assert isinstance(image2, XRImage)
 
     # --- SatpyScene
-    from downsat import SatpyScene
+    from downsat.satpy import SatpyScene
 
     msg = MSG.from_env(data_path=msg_archive_path, num_workers=3, flatten=True)
     scn = SatpyScene(msg, reader="seviri_l1b_native", channels="IR_108", area="eurol")

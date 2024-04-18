@@ -43,7 +43,8 @@ def test_to_satpy_scene_no_channels_to_resample() -> None:
 def test_satpy_scene(msg_archive_path: Path, eumdac_key: "EumdacKey", area: str | None) -> None:
     from satpy import Scene
 
-    from downsat import MSG, SatpyScene
+    from downsat import MSG
+    from downsat.satpy import SatpyScene
 
     msg = MSG(eumdac_key, msg_archive_path)
     scene_archive = SatpyScene(msg, reader="seviri_l1b_native", area=area, channels=["IR_108"])
@@ -75,10 +76,10 @@ def test_to_satpy_product(
 ) -> None:
     from trollimage.xrimage import XRImage
 
-    from downsat import SatpyScene
     from downsat.data_sources.satpy import ToSatpyProduct, ToSatpyScene
     from downsat.etl.class_transforms import reduce
     from downsat.etl.metadata import getmeta
+    from downsat.satpy import SatpyScene
 
     scene_archive = reduce(msg_archive, ToSatpyScene)(reader="seviri_l1b_native", area=area, channels=composite)  # type: ignore  # TODO: fix by mypy plugin
     product_archive = (scene_archive >> ToSatpyProduct)(composite=composite)  # type: ignore  # TODO: fix by mypy plugin
@@ -99,7 +100,8 @@ def test_to_satpy_product(
 def test_satpy_product(msg_archive_path: Path, eumdac_key: "EumdacKey", area: str | None) -> None:
     from trollimage.xrimage import XRImage
 
-    from downsat import MSG, SatpyProduct
+    from downsat import MSG
+    from downsat.satpy import SatpyProduct
 
     msg = MSG(eumdac_key, msg_archive_path)
     product_archive = SatpyProduct(msg, "natural_color", reader="seviri_l1b_native", area=area)
@@ -130,8 +132,8 @@ def test_satpy_product(msg_archive_path: Path, eumdac_key: "EumdacKey", area: st
 
 
 def test_cached_satpy_product(msg_archive: "protocols.MultiKeyDataSource", tmp_path: Path) -> None:
-    from downsat import SatpyProduct
     from downsat.etl.metadata import getmeta
+    from downsat.satpy import SatpyProduct
 
     product_archive_with_cache = SatpyProduct(
         msg_archive, reader="seviri_l1b_native", area="germ", composite="IR_108", cache_path=tmp_path
