@@ -77,7 +77,10 @@ def test_satpy_scene(
 @pytest.mark.parametrize("composite", ["IR_108", "natural_color"], ids=["IR_108", "natural_color"])
 @pytest.mark.parametrize("area", [None, "germ"], ids=["no_area", "germ"])
 def test_to_satpy_product(
-    msg_archive: "protocols.MultiKeyDataSource", area: str | None, composite: str, is_satpy_available: bool  # noqa: U100
+    msg_archive: "protocols.MultiKeyDataSource",
+    area: str | None,
+    composite: str,
+    is_satpy_available: bool,  # noqa: U100
 ) -> None:
     from trollimage.xrimage import XRImage
 

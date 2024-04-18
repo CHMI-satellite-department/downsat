@@ -7,8 +7,8 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-attrs = "^22.2.0"
-cattrs = "^23.1.2"
+attrs = ">=22.2.0"
+cattrs = ">=23.1.2"
 arrow = "^1.2.3"
 diskcache = "^5.4.0"
 eumdac = "^2.0.1"
@@ -21,7 +21,7 @@ importlib-metadata = "^6.0.0"
 pyresample = "^1.26.1"
 spacetrack = "^1.0.1"
 filelock = "^3.12.2"
-satpy = {version = "^0.40.0", optional = true}
+satpy = {version = ">=0.40.0", optional = true}
 pyorbital = {version = "^1.7.3", optional = true}
 trollimage = {version = "^1.20.1", optional = true}
 trollsift = "^0.5.0"
