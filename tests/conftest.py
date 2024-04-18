@@ -200,3 +200,16 @@ def random_xrimage() -> "XRImage":
 
     # Convert the DataArray to an RGB XRImage
     return XRImage(da)
+
+
+# extras
+
+
+@pytest.fixture
+def is_satpy_available() -> bool:
+    try:
+        pass
+    except ImportError:
+        pytest.skip("Satpy is not available.")
+
+    return True

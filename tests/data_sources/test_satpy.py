@@ -15,7 +15,10 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize("channels", [["IR_108"], "IR_108"], ids=["channels_list", "channels_str"])
 @pytest.mark.parametrize("area", [None, "germ"], ids=["no_area", "germ"])
 def test_to_satpy_scene(
-    msg_archive: "protocols.MultiKeyDataSource", area: str | None, channels: list[str] | str
+    msg_archive: "protocols.MultiKeyDataSource",
+    area: str | None,
+    channels: list[str] | str,
+    is_satpy_available: bool,  # noqa: U100
 ) -> None:
     from satpy import Scene
 
@@ -32,7 +35,7 @@ def test_to_satpy_scene(
     # TODO: test that the scene was resampled
 
 
-def test_to_satpy_scene_no_channels_to_resample() -> None:
+def test_to_satpy_scene_no_channels_to_resample(is_satpy_available: bool) -> None:  # noqa: U100
     from downsat.data_sources.satpy import ToSatpyScene
 
     with pytest.raises(ValueError):
@@ -40,10 +43,13 @@ def test_to_satpy_scene_no_channels_to_resample() -> None:
 
 
 @pytest.mark.parametrize("area", [None, "germ"], ids=["no_area", "germ"])
-def test_satpy_scene(msg_archive_path: Path, eumdac_key: "EumdacKey", area: str | None) -> None:
+def test_satpy_scene(
+    msg_archive_path: Path, eumdac_key: "EumdacKey", area: str | None, is_satpy_available: bool  # noqa: U100
+) -> None:
     from satpy import Scene
 
-    from downsat import MSG, SatpyScene
+    from downsat import MSG
+    from downsat.satpy import SatpyScene
 
     msg = MSG(eumdac_key, msg_archive_path)
     scene_archive = SatpyScene(msg, reader="seviri_l1b_native", area=area, channels=["IR_108"])
@@ -71,14 +77,14 @@ def test_satpy_scene(msg_archive_path: Path, eumdac_key: "EumdacKey", area: str 
 @pytest.mark.parametrize("composite", ["IR_108", "natural_color"], ids=["IR_108", "natural_color"])
 @pytest.mark.parametrize("area", [None, "germ"], ids=["no_area", "germ"])
 def test_to_satpy_product(
-    msg_archive: "protocols.MultiKeyDataSource", area: str | None, composite: str
+    msg_archive: "protocols.MultiKeyDataSource", area: str | None, composite: str, is_satpy_available: bool  # noqa: U100
 ) -> None:
     from trollimage.xrimage import XRImage
 
-    from downsat import SatpyScene
     from downsat.data_sources.satpy import ToSatpyProduct, ToSatpyScene
     from downsat.etl.class_transforms import reduce
     from downsat.etl.metadata import getmeta
+    from downsat.satpy import SatpyScene
 
     scene_archive = reduce(msg_archive, ToSatpyScene)(reader="seviri_l1b_native", area=area, channels=composite)  # type: ignore  # TODO: fix by mypy plugin
     product_archive = (scene_archive >> ToSatpyProduct)(composite=composite)  # type: ignore  # TODO: fix by mypy plugin
@@ -96,10 +102,13 @@ def test_to_satpy_product(
 
 
 @pytest.mark.parametrize("area", [None, "germ"], ids=["no_area", "germ"])
-def test_satpy_product(msg_archive_path: Path, eumdac_key: "EumdacKey", area: str | None) -> None:
+def test_satpy_product(
+    msg_archive_path: Path, eumdac_key: "EumdacKey", area: str | None, is_satpy_available: bool  # noqa: U100
+) -> None:
     from trollimage.xrimage import XRImage
 
-    from downsat import MSG, SatpyProduct
+    from downsat import MSG
+    from downsat.satpy import SatpyProduct
 
     msg = MSG(eumdac_key, msg_archive_path)
     product_archive = SatpyProduct(msg, "natural_color", reader="seviri_l1b_native", area=area)
@@ -129,9 +138,11 @@ def test_satpy_product(msg_archive_path: Path, eumdac_key: "EumdacKey", area: st
     assert all(isinstance(s, XRImage) for s in prod)
 
 
-def test_cached_satpy_product(msg_archive: "protocols.MultiKeyDataSource", tmp_path: Path) -> None:
-    from downsat import SatpyProduct
+def test_cached_satpy_product(
+    msg_archive: "protocols.MultiKeyDataSource", tmp_path: Path, is_satpy_available: bool  # noqa: U100
+) -> None:
     from downsat.etl.metadata import getmeta
+    from downsat.satpy import SatpyProduct
 
     product_archive_with_cache = SatpyProduct(
         msg_archive, reader="seviri_l1b_native", area="germ", composite="IR_108", cache_path=tmp_path

@@ -11,7 +11,17 @@ from downsat.data_sources.satellite_info import (
     satellite_info_geo,
     satellite_info_leo,
 )
-from downsat.data_sources.satpy import SatpyProduct, SatpyScene
+
+
+try:
+    from downsat.data_sources.satpy import (  # TODO: this is deprecated -> remove; users should import this from downsat.satpy
+        SatpyProduct,
+        SatpyScene,
+    )
+except ImportError:
+    _satpy_available = False
+else:
+    _satpy_available = True
 from downsat.data_sources.tle import DailyTLE
 
 
@@ -30,6 +40,7 @@ __all__ = [
     "satellite_info_geo",
     "satellite_info_leo",
     "satellite_info",
-    "SatpyProduct",
-    "SatpyScene",
 ]
+
+if _satpy_available:
+    __all__ += ["SatpyProduct", "SatpyScene"]
