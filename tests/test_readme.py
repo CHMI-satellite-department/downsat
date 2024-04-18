@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from downsat.clients.spacetrack import SpaceTrackKey
 
 
-def test_downloading_data(msg_archive_path: Path, eumdac_key: "EumdacKey") -> None:
+def test_downloading_data_msg(msg_archive_path: Path, eumdac_key: "EumdacKey") -> None:
     from downsat import MSG
 
     # --- downloading data
@@ -31,16 +31,24 @@ def test_downloading_data(msg_archive_path: Path, eumdac_key: "EumdacKey") -> No
 
     EumdacCollection(name="MSG", credentials=key).collection.search_options
 
+
+def test_downloading_data_metop(metop_archive_path: Path) -> None:
     # --- Downloading data to cover certain point of region of interest
     from downsat import Metop
 
-    metop = Metop.from_env(data_path=msg_archive_path, area="eurol")
+    metop = Metop.from_env(data_path=metop_archive_path, area="eurol")
     metop["2022110411"]
 
     from downsat import LonLat
 
-    metop = Metop.from_env(data_path=msg_archive_path, point=LonLat(lon=14.46, lat=50.0))
+    metop = Metop.from_env(data_path=metop_archive_path, point=LonLat(lon=14.46, lat=50.0))
     metop["2022110411"]
+
+
+def test_downloading_data_satpy(msg_archive_path: Path, is_satpy_available: bool) -> None:  # noqa: U100
+    from downsat import MSG
+
+    msg = MSG.from_env(data_path=msg_archive_path, sat="MSG4")
 
     # --- Satpy
     from satpy import Scene
