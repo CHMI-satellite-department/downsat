@@ -54,4 +54,4 @@ def DailyTLE(
     # TODO: at this moment, the data may be downloaded and cached twice, once when the object_id is int,
     # i.e. norad ID of the satellite, and once when it is str, i.e. name of the satellite
     # -> set data_path=data_path / str(satellite_name) to disambiguate
-    return DailyTLE(object_id=object_id, credentials=credentials, data_path=data_path / str(object_id))  # type: ignore  # TODO: fix - mypy plugin
+    return DailyTLE(object_id=object_id, credentials=credentials, data_path=Path(data_path) / str(object_id))  # type: ignore  # TODO: fix - mypy plugin
