@@ -8,7 +8,7 @@ from pathlib import Path
 from downsat.clients.spacetrack import DailyTLE as DailyTLESource
 from downsat.clients.spacetrack import SpaceTrackKey
 from downsat.core.file_storage import FileDataset
-from downsat.core.utils import TimeSlotType, parse_time
+from downsat.core.utils import TimeSlotType, parse_time, stringio_length
 from downsat.etl.class_transforms import cache, reduce
 from downsat.etl.converters import to_filesystem, to_stringio
 from downsat.etl.metadata import getmeta
@@ -45,7 +45,7 @@ def DailyTLE(
         >> cache(
             DailyTLESource >> to_stringio,
             cache=FileDataset,  # type: ignore  # TODO: fix
-            skip_if=lambda _, data: getmeta(data)["date"] >= datetime.date.today(),
+            skip_if=lambda _, data: stringio_length(data) == 0 or getmeta(data)["date"] >= datetime.date.today(),
         )
         >> to_filesystem,
         partial(Flatten, depth=2),  # type: ignore  # TODO: fix

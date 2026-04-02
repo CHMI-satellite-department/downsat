@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import Literal, overload
+
+import io
 from pathlib import Path
 
 import arrow
@@ -133,3 +135,11 @@ def is_relative_to(path: Path, other: Path) -> bool:
         return False
     else:
         return True
+
+
+def stringio_length(stringio: io.StringIO) -> int:
+    pos = stringio.tell()
+    stringio.seek(0, io.SEEK_END)
+    length = stringio.tell()
+    stringio.seek(pos)
+    return length
