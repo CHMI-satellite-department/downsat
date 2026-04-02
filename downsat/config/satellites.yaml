@@ -1,6 +1,6 @@
 leo:  
   - norad_id: 29499
-    names: [METOP-A]
+    names: [METOP-A, METOP A]
     instruments:
       AVHRR:  # https://www.eumetsat.int/avhrr
         model: AVHRR/3
@@ -8,7 +8,7 @@ leo:
         scan_rate: 6  # https://www.eumetsat.int/avhrr
   
   - norad_id: 38771
-    names: [METOP-B]    
+    names: [METOP-B, METOP B]
     instruments:
       AVHRR:  # https://www.eumetsat.int/avhrr
         model: AVHRR/3
