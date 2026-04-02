@@ -1,4 +1,5 @@
 from attrs import field, frozen
+from functools import cached_property
 from importlib_resources import files
 
 from downsat.core.io import yaml_converter
@@ -28,30 +29,44 @@ class SatelliteInfo(DataSource[str, Satellite]):
             "rt", encoding="utf-8"
         ) as f:
             object.__setattr__(self, "satellites", yaml_converter.loads(f.read(), Satellites))
+        
+        # TODO: check uniqueness of NORAD IDs
 
-    def __getitem__(self, name: str) -> Satellite:
-        """Get satellite by name."""
+    def __getitem__(self, name: str | int) -> Satellite:
+        """Get satellite by name or NORAD ID."""
+        # TODO: cache
+        for satellite in self._all_satellites:
+            if name in satellite.names:
+                return satellite
+            if isinstance(name, int) and satellite.norad_id == name:
+                return satellite
+        raise KeyError(f"Satellite {name} not found.")
+
+    @cached_property
+    def _all_satellites(self) -> list[Satellite]:
+        """Get list of all satellites."""
+        satellites_to_check = []
         if self.leo:
-            try:
-                return self.satellites.leo[name]  # type: ignore
-            except KeyError:
-                pass
+            satellites_to_check.extend(self.satellites.leo)
         if self.geo:
-            try:
-                return self.satellites.geo[name]  # type: ignore
-            except KeyError:
-                pass
-
-        raise KeyError(f"Sattelite {name} not found.")
+            satellites_to_check.extend(self.satellites.geo)
+        return satellites_to_check
 
     def keys(self) -> tuple[str, ...]:
         """Get names of all satellites."""
         keys: tuple[str, ...] = ()
-        if self.leo:
-            keys += tuple(self.satellites.leo.keys())
-        if self.geo:
-            keys += tuple(self.satellites.geo.keys())
+        for satellite in self._all_satellites:
+            keys += satellite.names
+            keys += (satellite.norad_id,)
         return keys
+
+
+    def name_to_norad_id(self, name: str) -> int:
+        """Convert satellite name to NORAD ID.
+        
+        raises KeyError if satellite name is not found.
+        """
+        return self[name].norad_id
 
 
 satellite_info = SatelliteInfo()
