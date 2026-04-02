@@ -6,7 +6,7 @@ from functools import cached_property
 import os
 
 from attrs import field, frozen
-from attrs.validators import instance_of
+from attrs.validators import instance_of, optional
 import importlib_resources as resources
 import spacetrack
 from spacetrack import SpaceTrackClient
@@ -77,10 +77,12 @@ class DailyTLE(abc.DataSource[str, List[str]]):
     """
 
     object_id: int | str = field(validator=instance_of((str, int)))
-    credentials: SpaceTrackKey = field(validator=instance_of(SpaceTrackKey))
+    credentials: SpaceTrackKey | None = field(validator=optional(instance_of(SpaceTrackKey)), default=None)
 
     @cached_property
-    def client(self) -> SpaceTrackClient:
+    def client(self) -> SpaceTrackClient | None:
+        if self.credentials is None:
+            return None
         return SpaceTrackClient(*self.credentials.credentials)
 
     def _json2tle(self, json_tle: dict[str, Any]) -> str:
@@ -119,14 +121,18 @@ class DailyTLE(abc.DataSource[str, List[str]]):
             object_id_kwargs = {"norad_cat_id": self.object_id}
 
         # download TLE
-        json_tles = self.client.tle(
-            **object_id_kwargs,
-            epoch=spacetrack.operators.inclusive_range(date, date + datetime.timedelta(days=1)),
-            orderby="TLE_LINE1",
-        )
+        client = self.client
+        if client is None:
+            json_tles = MetaList[str]([""])
+        else:
+            json_tles = client.tle(
+                **object_id_kwargs,
+                epoch=spacetrack.operators.inclusive_range(date, date + datetime.timedelta(days=1)),
+                orderby="TLE_LINE1",
+            )
 
-        # convert to string + metadata
-        json_tles = MetaList([self._json2tle(json_tle) for json_tle in json_tles])
+            # convert to string + metadata
+            json_tles = MetaList([self._json2tle(json_tle) for json_tle in json_tles])
         setmeta(json_tles, key=key, date=date, object_id=self.object_id)
 
         return json_tles

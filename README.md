@@ -227,6 +227,8 @@ tle = tle_archive['2023-06-21']
 # (Path('/my/tle/archive/METOP-B/2023-06-21'),)
 ```
 
+If you want to use only the local archive without downloading new data from SpaceTrack, set `credentials=None`.
+
 ### Satellite parameters
 
 For its internal purposes, downsat maintains a limited datbase of parmeters of satellites and their instruments.
