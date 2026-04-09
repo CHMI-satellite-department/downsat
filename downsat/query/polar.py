@@ -91,7 +91,7 @@ def find_visible_polar_passes(
         It can be ommited for known satellites. In such case the value is taken from the `downsat.config.satellites.yaml` file.
         If not found, a ValueError is raised. Can also be a dictionary mapping satellite names to horizon angles.
     :parm altitutde: Altitude of the ground point of interest in meters. Default is 0 (sea level).
-    :param max_tle_age: Maximum age in days of TLE data to consider. Default is 14 days.
+    :param max_tle_age: Maximum age in days of TLE data to consider, relative to the start of the time interval. Default is 14 days.
     :return: Tuple of times when the satellite at its maximum elevation can observe the ground point. Each time corrsponds to
         one satellite orbit. If multiple satellites are queried, the result is a dictionary mapping satellite names to tuples of
         observation times. If the satellite is not visible at all, an empty tuple is returned.
@@ -153,16 +153,16 @@ def find_visible_polar_passes(
 
         time_interval = slice(middle_time - dt, middle_time + dt)  # type: ignore  # TODO: fix
 
-    # adjust time interval such that the length is a round number of hours
+    # adjust time interval such that the length is a round number of hours as needed by pyorbital
     dt = (time_interval.stop - time_interval.start) / 2
     window_span = dt * 2  # type: ignore  # TODO: fix
     window_hours = int(max(1, np.ceil(window_span.total_seconds()) / 3600))  # type: ignore # at least one hour # TODO: fix type:
-    window_start = time_interval.start + dt - datetime.timedelta(hours=window_hours)
-    date = time_interval.stop.date()
+    window_start = time_interval.start + dt - datetime.timedelta(seconds=window_hours * 3600 / 2)
+    date = time_interval.stop.date()    
 
     # find satellite passes
     daily_tle_archive = tle_archive(satellite)  # TODO: always use NORAD ID for TLE archive to be unambiguous
-    for _ in range(max_tle_age):  # max `max_tle_age` days old TLE
+    for _ in range(max_tle_age + int(np.ceil(window_hours / 24))):  # max (`max_tle_age` + window_days) days old TLE
         tle_file = daily_tle_archive[date]  # type: ignore  # TODO: fix
         if len(tle_file) > 0 and tle_file[0].stat().st_size > 0:
             # found TLE with non-zero size
@@ -210,5 +210,5 @@ def find_visible_polar_passes(
     return tuple(
         pass_time[2]
         for pass_time in pass_times
-        if pass_time[2] >= time_interval.start and pass_time[2] <= time_interval.stop
+        if (pass_time[2] >= time_interval.start) and (pass_time[2] <= time_interval.stop)
     )
