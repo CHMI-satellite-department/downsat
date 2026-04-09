@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from attrs import asdict, fields
+from cattrs.converters import BaseConverter
 from cattrs.preconf.pyyaml import make_converter as make_yaml_converter
 from cattrs.strategies import include_subclasses
 
@@ -10,8 +11,32 @@ from downsat.core.models import OnboardInstrument, Satellite
 from downsat.core.platform import Platform, RegisteredComponent
 
 
+def _satellite_union_strategy(union: Any, converter: BaseConverter) -> None:
+    """Disambiguate Satellite subclasses when structuring from a mapping.
+
+    Polar satellites may omit ``instruments`` (defaults to ``{}``), so cattrs'
+    default unique-required-field disambiguation cannot use ``instruments``.
+    """
+
+    def pick_class(val: Any) -> type:
+        if not isinstance(val, dict):
+            raise TypeError(f"Expected mapping for satellite config, got {type(val).__name__}")
+        from downsat.core.models import GeostationarySatellite, PolarSatellite
+
+        if "latitudes" in val:
+            return GeostationarySatellite
+        if "instruments" in val:
+            return PolarSatellite
+        return Satellite
+
+    def structure_satellite_union(val: Any, _: Any) -> Any:
+        return converter.structure(val, pick_class(val))
+
+    converter.register_structure_hook(union, structure_satellite_union)
+
+
 yaml_converter = make_yaml_converter()
-include_subclasses(Satellite, yaml_converter)
+include_subclasses(Satellite, yaml_converter, union_strategy=_satellite_union_strategy)
 include_subclasses(OnboardInstrument, yaml_converter)
 
 

@@ -4,7 +4,7 @@ from typing import Optional
 import datetime
 
 from attrs import converters, field, frozen
-from attrs.validators import deep_mapping, instance_of, optional
+from attrs.validators import deep_iterable, deep_mapping, instance_of, optional
 
 
 @frozen(slots=False)
@@ -58,6 +58,7 @@ class Satellite:
     """Base class for representation of a satellite."""
 
     norad_id: int = field(converter=int)
+    names: tuple[str, ...] = field(converter=tuple)
 
 
 @frozen(slots=False)
@@ -66,18 +67,19 @@ class PolarSatellite(Satellite):
 
     instruments: dict[str, PolarInstrument] = field(
         converter=dict,
+        factory=dict,
         validator=deep_mapping(key_validator=instance_of(str), value_validator=instance_of(PolarInstrument)),
     )
 
     @property
     def max_swath_angle(self) -> float:
         """Maximum swath angle of all instruments in degrees."""
-        return max(instrument.max_swath_angle for instrument in self.instruments.values())
+        return max(instrument.swath_angle for instrument in self.instruments.values())
 
     @property
     def min_swath_angle(self) -> float:
         """Minimum swath angle of all instruments in degrees."""
-        return min(instrument.min_swath_angle for instrument in self.instruments.values())
+        return min(instrument.swath_angle for instrument in self.instruments.values())
 
 
 @frozen(slots=False)
@@ -96,15 +98,13 @@ class GeostationarySatellite(Satellite):
 class Satellites:
     """Representation of a group of polar satellites."""
 
-    leo: dict[str, PolarSatellite] = field(
-        factory=dict,  # type: ignore  # TODO: fix
-        converter=converters.optional(dict),
-        validator=deep_mapping(key_validator=instance_of(str), value_validator=instance_of(PolarSatellite)),
+    leo: tuple[PolarSatellite, ...] = field(
+        factory=tuple,  # type: ignore  # TODO: fix
+        converter=converters.optional(tuple),
+        validator=deep_iterable(instance_of(PolarSatellite)),
     )
-    geo: dict[str, GeostationarySatellite] = field(
-        factory=dict,  # type: ignore  # TODO: fix
-        converter=converters.optional(dict),
-        validator=deep_mapping(
-            key_validator=instance_of(str), value_validator=instance_of(GeostationarySatellite)
-        ),
+    geo: tuple[GeostationarySatellite, ...] = field(
+        factory=tuple,  # type: ignore  # TODO: fix
+        converter=converters.optional(tuple),
+        validator=deep_iterable(instance_of(GeostationarySatellite)),
     )

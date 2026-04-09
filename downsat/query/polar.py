@@ -5,6 +5,7 @@ import datetime
 
 import numpy as np
 from pyorbital.orbital import Orbital
+from pyorbital.tlefile import get_platforms_filepath, read_platform_numbers
 
 from downsat.core.models import LonLat
 from downsat.core.utils import TimeSlotType, parse_time
@@ -27,13 +28,20 @@ if TYPE_CHECKING:
         ...
 
 
+def norad_to_pyorbital_name(norad_id: int) -> str:
+    """Convert NORAD ID to pyorbital satellite name."""
+    pyorbital_names_to_norad_ids = read_platform_numbers(get_platforms_filepath(), in_upper=True, num_as_int=True)   
+    norad_ids_to_pyorbital_names = {nid: name for name, nid in pyorbital_names_to_norad_ids.items()}
+    return norad_ids_to_pyorbital_names[norad_id]
+
+
 @overload
 def find_visible_polar_passes(
     coords: LonLat,
     time: TimeSlotType,
     tle_archive: Callable[[int | str], protocols.DataSource],
     satellite: str,
-    satellite_info_archive: SatelliteInfo = satellite_info_leo,
+    satellite_info_archive: SatelliteInfo = satellite_info_leo,    
     dt: datetime.timedelta | None = None,
     horizon: float | dict[str, float] | None = None,
     altitude: float = 0,
@@ -48,7 +56,7 @@ def find_visible_polar_passes(
     time: TimeSlotType,
     tle_archive: Callable[[int | str], protocols.DataSource],
     satellite: "SequenceNotStr[str]" | None = None,
-    satellite_info_archive: SatelliteInfo = satellite_info_leo,
+    satellite_info_archive: SatelliteInfo = satellite_info_leo,    
     dt: datetime.timedelta | None = None,
     horizon: float | dict[str, float] | None = None,
     altitude: float = 0,
@@ -61,7 +69,7 @@ def find_visible_polar_passes(
     coords: LonLat,
     time: TimeSlotType,
     tle_archive: Callable[[int | str], protocols.DataSource],
-    satellite: str | Sequence[str] | None = None,
+    satellite: str | Sequence[str] | int | Sequence[int] | None = None,
     satellite_info_archive: SatelliteInfo = satellite_info_leo,
     dt: datetime.timedelta | None = None,
     horizon: float | dict[str, float] | None = None,
@@ -74,7 +82,7 @@ def find_visible_polar_passes(
     :param time: Specific time or time interval of interest. If a single time is given, the dt parameter must be specified.
     :param tle_archive: Partially initialized TLE archive. The `satellite` parameter is used to complete the initialization.
         Ex: `tle_archive=partial(DailyTLE, credentials=SpaceTrack.from_env(), data_path="/path/to/tle/archive")`
-    :param satellite: Satellite name(s) or None. If None, all polar satellites from the `satellite_info_archive` will be considered.
+    :param satellite: Satellite name(s) or NORAD ID(s) or None. If None, all polar satellites from the `satellite_info_archive` will be considered.
         If multiple satellites are processed, the result is a dictionary with satellite names as keys and lists of passes as values.
     :param satellite_info_archive: Partially initialized satellite info archive. Initialized using the 'satellite' argument.
     :param dt: Halfwidth of the time interval. If None, `time` must be an interval; otherwise time must be a single time point.
@@ -94,7 +102,8 @@ def find_visible_polar_passes(
         # get all known satellites
         satellite = satellite_info_archive.keys()
 
-    if not isinstance(satellite, str):
+    # if satellite is a sequence of strings or ints, return a dictionary of passes for each satellite
+    if not isinstance(satellite, (str, int)):
         return {
             sat: find_visible_polar_passes(
                 coords=coords,
@@ -126,7 +135,7 @@ def find_visible_polar_passes(
             horizon = 90 - satellite_data.max_swath_angle  # type: ignore
         except AttributeError:
             raise ValueError(
-                "The horizon parameter must be specified. {satellite} does not seem to be a polar satellite - cannot find its swath angle."
+                "The horizon parameter must be specified. {satellite} does not have its swath angle defined."
             )
 
     # construct time interval given by the user
@@ -152,7 +161,7 @@ def find_visible_polar_passes(
     date = time_interval.stop.date()
 
     # find satellite passes
-    daily_tle_archive = tle_archive(satellite)
+    daily_tle_archive = tle_archive(satellite)  # TODO: always use NORAD ID for TLE archive to be unambiguous
     for _ in range(max_tle_age):  # max `max_tle_age` days old TLE
         tle_file = daily_tle_archive[date]  # type: ignore  # TODO: fix
         if len(tle_file) > 0 and tle_file[0].stat().st_size > 0:
@@ -165,7 +174,24 @@ def find_visible_polar_passes(
             f"No valid TLE file found for satellite `{satellite}` within the last {max_tle_age} days."
         )
 
-    orb = Orbital(satellite, tle_file=str(tle_file[0]))
+    # convert satellite name or NORAD ID to pyorbital satellite name
+    if isinstance(satellite, str):
+        try:
+            satellite_data = satellite_info_archive[satellite]
+        except KeyError:
+            pyorbital_satellite_name = satellite
+        else:
+            pyorbital_satellite_name = norad_to_pyorbital_name(satellite_data.norad_id)
+    else:
+        pyorbital_satellite_name = norad_to_pyorbital_name(satellite)
+
+    # use pyorbital to find passes
+    try:
+        orb = Orbital(pyorbital_satellite_name, tle_file=str(tle_file[0]))
+    except KeyError:
+        # pyorbital often uses "-" instead of " " used by SpaceTrack for satellite names ==> give it a try
+        orb = Orbital(pyorbital_satellite_name.replace(" ", "-"), tle_file=str(tle_file[0]))
+
     pass_times = orb.get_next_passes(
         utc_time=window_start,
         length=window_hours,
