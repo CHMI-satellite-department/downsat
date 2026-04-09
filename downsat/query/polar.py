@@ -156,7 +156,7 @@ def find_visible_polar_passes(
     # adjust time interval such that the length is a round number of hours as needed by pyorbital
     dt = (time_interval.stop - time_interval.start) / 2
     window_span = dt * 2  # type: ignore  # TODO: fix
-    window_hours = int(max(1, np.ceil(window_span.total_seconds()) / 3600))  # type: ignore # at least one hour # TODO: fix type:
+    window_hours = int(max(1, np.ceil(window_span.total_seconds()) / 3600))  # type: ignore # at least one hour # TODO: fix type:    
     window_start = time_interval.start + dt - datetime.timedelta(seconds=window_hours * 3600 / 2)
     date = time_interval.stop.date()    
 
@@ -191,6 +191,10 @@ def find_visible_polar_passes(
     except KeyError:
         # pyorbital often uses "-" instead of " " used by SpaceTrack for satellite names ==> give it a try
         orb = Orbital(pyorbital_satellite_name.replace(" ", "-"), tle_file=str(tle_file[0]))
+
+    if hasattr(window_start, "datetime"):
+        # Assume Arrow object, convert to datetime
+        window_start = window_start.datetime    
 
     pass_times = orb.get_next_passes(
         utc_time=window_start,
